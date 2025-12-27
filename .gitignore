@@ -1,0 +1,123 @@
+# Build and output directories
+/build
+/captures
+.externalNativeBuild
+.cxx
+**/build/
+**/captures/
+**/outputs/
+**/intermediates/
+**/generated/
+
+# Built application files
+*.apk
+*.ap_
+*.aab
+
+# Dex and class files
+*.dex
+*.class
+
+# Generated files
+bin/
+gen/
+out/
+
+# Local configuration
+local.properties
+gradle.properties
+
+# Eclipse project files
+.classpath
+.project
+
+# macOS system files
+.DS_Store
+
+# Gradle files
+.gradle/
+**/gradle/wrapper/dists/
+**/gradle/caches/
+**/gradle/daemon/
+
+# Signing keys (avoid leaking secrets!)
+**/keystore.jks
+**/debug.keystore
+
+# Android Studio/IntelliJ IDEA files
+.idea/
+*.iml
+misc.xml
+tasks.xml
+workspace.xml
+*.iws
+# Keep code styles
+!/.idea/codeStyles
+/.idea/codeStyles/*
+!/.idea/codeStyles/Project.xml
+!/.idea/codeStyles/codeStyleConfig.xml
+
+# Logs and temp files
+*.log
+*.swp
+*.swo
+*.bak
+*.tmp
+
+# Build artifacts
+**/app/build/
+**/app/release/
+
+# Test reports
+**/test-results/
+**/androidTest-results/
+
+# Ignore NDK intermediate files
+obj/
+*.so
+
+# Fastlane metadata
+fastlane/report.xml
+fastlane/metadata/
+
+# Jetpack Compose preview cache
+.compose-cache/
+
+# Kotlin temporary files (excluding build.gradle.kts)
+*.kts~
+
+# Kotlin
+.kotlin
+
+# Android Studio generated files and folders
+captures/
+.externalNativeBuild/
+.cxx/
+output.json
+
+# IntelliJ
+deploymentTargetDropDown.xml
+render.experimental.xml
+
+# Keystore files
+*.jks
+*.keystore
+
+# Google Services (e.g. APIs or Firebase)
+google-services.json
+
+# Android Profiling
+*.hprof
+
+.gradle
+xcuserdata
+!src/**/build/
+.idea
+captures
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+!*.xcodeproj/project.xcworkspace/
+!*.xcworkspace/contents.xcworkspacedata
+**/xcshareddata/WorkspaceSettings.xcsettings
+node_modules/
