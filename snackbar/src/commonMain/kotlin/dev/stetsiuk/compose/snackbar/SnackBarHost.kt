@@ -1,12 +1,12 @@
 package dev.stetsiuk.compose.snackbar
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
@@ -50,6 +50,8 @@ fun ProvideSnackBarHost(
     state: SnackBarHostState = rememberSnackBarHostState(),
     contentPadding: PaddingValues = SnackBarHostDefaults.contentPadding,
     contentAlignment: Alignment = SnackBarHostDefaults.alignment,
+    enter: EnterTransition = SnackBarHostDefaults.enterTransition,
+    exit: ExitTransition = SnackBarHostDefaults.exitTransition,
     content: @Composable () -> Unit,
 ) {
     val items = state.values
@@ -107,18 +109,8 @@ fun ProvideSnackBarHost(
                                         orientation = Orientation.Horizontal,
                                     ),
                                 visible = item.isVisible,
-                                enter = fadeIn() + scaleIn(
-                                    initialScale = 0.9f
-                                ) + expandVertically(
-                                    clip = false,
-                                    expandFrom = Alignment.Top
-                                ),
-                                exit = fadeOut() + scaleOut(
-                                    targetScale = 0.9f,
-                                ) + shrinkVertically(
-                                    clip = false,
-                                    shrinkTowards = Alignment.Top,
-                                ),
+                                enter = enter,
+                                exit = exit,
                             ) {
                                 item.content()
 
@@ -162,4 +154,11 @@ object SnackBarHostDefaults {
         )
 
     val alignment = Alignment.BottomCenter
+    val enterTransition = fadeIn() + scaleIn(
+        initialScale = 0.9f
+    ) + expandVertically(
+        clip = false,
+        expandFrom = Alignment.Top
+    )
+    val exitTransition = fadeOut()
 }
