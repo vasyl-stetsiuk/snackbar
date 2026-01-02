@@ -18,16 +18,14 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 import snackbarjetpackcompose.composeapp.generated.resources.Res
 import snackbarjetpackcompose.composeapp.generated.resources.outline_close_24
 import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 @OptIn(ExperimentalUuidApi::class)
 fun SnackBarHostState.show(
     text: String,
-    id: String = Uuid.random().toString(),
-    timeoutMs: SnackBarData.Duration = SnackBarData.Duration.Long,
 ) {
-    val data = SnackBarData(id, timeoutMs) {
-        DraggableSnackBar(text) { hide(id) }
+    val state = SnackBarState()
+    val data = SnackBarData(state) {
+        DraggableSnackBar(text) { state.hide() }
     }
     show(data)
 }

@@ -1,9 +1,5 @@
 package dev.stetsiuk.compose.snackbar
 
-import androidx.compose.animation.core.AnimationSpec
-import androidx.compose.animation.core.DecayAnimationSpec
-import androidx.compose.animation.core.exponentialDecay
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
@@ -21,8 +17,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+
+enum class SnackBarVisibilityState {
+    InvisibleStart,
+    Visible,
+    InvisibleEnd
+}
 
 @Composable
 fun BasicSnackBar(
@@ -52,10 +53,6 @@ fun BasicDraggableSnackBar(
     contentColor: Color = BasicSnackBarDefaults.contentColor,
     border: BorderStroke? = null,
     onDismissed: () -> Unit,
-    positionalThreshold: (Float) -> Float = { distance -> distance * 0.5f },
-    velocityThreshold: (Density) -> Float = { density -> with(density) { 80.dp.toPx() } },
-    snapAnimationSpec: AnimationSpec<Float> = tween(300),
-    decayAnimationSpec: DecayAnimationSpec<Float> = exponentialDecay(),
     content: @Composable () -> Unit,
 ) {
     BoxWithConstraints(
@@ -73,10 +70,6 @@ fun BasicDraggableSnackBar(
             AnchoredDraggableState(
                 initialValue = SnackBarVisibilityState.Visible,
                 anchors = anchors,
-                positionalThreshold = positionalThreshold,
-                velocityThreshold = { velocityThreshold(density) },
-                snapAnimationSpec = snapAnimationSpec,
-                decayAnimationSpec = decayAnimationSpec
             )
         }.also {
             LaunchedEffect(it.currentValue) {

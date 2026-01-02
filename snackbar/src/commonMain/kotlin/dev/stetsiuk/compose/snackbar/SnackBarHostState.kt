@@ -15,7 +15,7 @@ class SnackBarHostState {
         }
     }
 
-    fun hide(id: String) {
+    internal fun hide(id: String) {
         values.removeAll { it.id == id }
     }
 }

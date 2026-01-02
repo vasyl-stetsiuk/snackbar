@@ -8,16 +8,11 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.gestures.AnchoredDraggableState
-import androidx.compose.foundation.gestures.DraggableAnchors
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.anchoredDraggable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
@@ -27,21 +22,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlin.time.Clock
-
-enum class SnackBarVisibilityState {
-    InvisibleStart,
-    Visible,
-    InvisibleEnd
-}
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -55,8 +43,7 @@ fun ProvideSnackBarHost(
     content: @Composable () -> Unit,
 ) {
     val items = state.values
-    val isAnyVisible = items.any { !it.isDisposed }
-    val isAllDisposed = items.all { it.isDisposed }
+    val isAnyVisible = items.isNotEmpty()
 
     CompositionLocalProvider(
         LocalSnackBarHostState provides state
@@ -65,80 +52,43 @@ fun ProvideSnackBarHost(
             content()
 
             if (isAnyVisible) {
-                Box(
-                    modifier = Modifier
-                        .align(contentAlignment)
-                        .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
-                        .fillMaxWidth()
-                        .padding(contentPadding)
-                ) {
-                    items.forEachIndexed { _, item ->
+                items.forEachIndexed { _, item ->
+                    key(item.id) {
                         BoxWithConstraints(
                             modifier = Modifier
-                                .fillMaxWidth()
+                                .align(contentAlignment)
+                                .graphicsLayer {
+                                    compositingStrategy = CompositingStrategy.Offscreen
+                                }
+                                .padding(contentPadding)
                         ) {
-                            val density = LocalDensity.current
-                            val anchors = remember {
-                                DraggableAnchors {
-                                    SnackBarVisibilityState.InvisibleStart at with(density) { -maxWidth.toPx() * 2f }
-                                    SnackBarVisibilityState.Visible at 0f
-                                    SnackBarVisibilityState.InvisibleEnd at with(density) { maxWidth.toPx() * 2 }
-                                }
-                            }
-                            val anchorState = remember {
-                                AnchoredDraggableState(
-                                    initialValue = SnackBarVisibilityState.Visible,
-                                    anchors = anchors,
-                                )
-                            }.also {
-                                LaunchedEffect(it.currentValue) {
-                                    if (it.currentValue != SnackBarVisibilityState.Visible) {
-                                        item.isVisible = false
-                                    }
-                                }
-                            }
-
+                            val itemState = item.state
                             AnimatedVisibility(
-                                modifier = Modifier
-                                    .graphicsLayer {
-                                        translationX = anchorState.requireOffset()
-                                    }
-                                    .fillMaxWidth()
-                                    .anchoredDraggable(
-                                        state = anchorState,
-                                        orientation = Orientation.Horizontal,
-                                    ),
-                                visible = item.isVisible,
+                                visible = itemState.isVisibleTarget,
                                 enter = enter,
                                 exit = exit,
                             ) {
                                 item.content()
 
                                 DisposableEffect(Unit) {
-                                    onDispose { item.isDisposed = true }
+                                    onDispose { state.hide(item.id) }
                                 }
                             }
-                        }
 
-                        LaunchedEffect(item.duration, item.start) {
-                            delay(
-                                ((item.start + item.duration.valueMs) - Clock.System.now()
-                                    .toEpochMilliseconds())
-                                    .coerceAtLeast(0)
-                            )
-                            item.isVisible = false
-                        }
+                            LaunchedEffect(item.duration, itemState.start) {
+                                delay(
+                                    ((itemState.start + item.duration.valueMs) - Clock.System.now()
+                                        .toEpochMilliseconds())
+                                        .coerceAtLeast(0)
+                                )
+                                itemState.hide()
+                            }
 
-                        LaunchedEffect(Unit) {
-                            item.isVisible = true
+                            LaunchedEffect(Unit) {
+                                itemState.show()
+                            }
                         }
                     }
-                }
-            }
-
-            LaunchedEffect(isAllDisposed) {
-                if (isAllDisposed) {
-                    state.values.clear()
                 }
             }
         }
