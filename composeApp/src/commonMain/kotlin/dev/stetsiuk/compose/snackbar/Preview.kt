@@ -33,17 +33,17 @@ fun SnackBarHostState.show(
 @Composable
 fun DraggableSnackBar(
     text: String,
-    modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(16.dp, 4.dp),
     onClose: () -> Unit,
 ) {
     BasicDraggableSnackBar(
-        modifier = modifier.padding(horizontal = 16.dp),
+        modifier = Modifier.padding(horizontal = 16.dp),
         color = Color.Gray,
         onDismissed = onClose,
         content = {
             Row(
-                modifier = modifier.padding(contentPadding),
+                modifier = Modifier.padding(
+                    PaddingValues(16.dp, 4.dp)
+                ),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(

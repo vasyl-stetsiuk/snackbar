@@ -4,6 +4,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -24,14 +26,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import dev.stetsiuk.compose.snackbar.model.SnackBarStackParams
 import kotlinx.coroutines.delay
+import kotlin.math.pow
 import kotlin.time.Clock
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -39,10 +45,11 @@ import kotlin.time.Clock
 fun ProvideSnackBarHost(
     modifier: Modifier = Modifier,
     state: SnackBarHostState = rememberSnackBarHostState(),
-    contentPadding: PaddingValues = SnackBarHostDefaults.contentPadding,
+    contentPadding: PaddingValues = SnackBarHostDefaults.contentPadding(),
     contentAlignment: Alignment = SnackBarHostDefaults.alignment,
     enter: EnterTransition = SnackBarHostDefaults.enterTransition,
     exit: ExitTransition = SnackBarHostDefaults.exitTransition,
+    stackParams: SnackBarStackParams = SnackBarHostDefaults.stackParams,
     content: @Composable () -> Unit,
 ) {
     val items = state.values
@@ -55,15 +62,30 @@ fun ProvideSnackBarHost(
             content()
 
             if (isAnyVisible) {
-                items.forEachIndexed { _, item ->
+                val transformOrigin = contentAlignment.toTransformOrigin()
+                val visibleItems = items.takeLast(stackParams.maxVisibleItems)
+
+                visibleItems.forEachIndexed { index, item ->
                     key(item.id) {
+                        val stackIndex = visibleItems.size - 1 - index
+                        val scale by animateFloatAsState(stackParams.scaleRatio.pow(stackIndex))
+                        val alpha by animateFloatAsState(stackParams.alphaRatio.pow(stackIndex))
+                        val offsetY by animateDpAsState(stackParams.offsetStep * stackIndex)
+
                         BoxWithConstraints(
                             modifier = Modifier
                                 .align(contentAlignment)
                                 .graphicsLayer {
+                                    translationY = offsetY.toPx()
+                                    this.transformOrigin = transformOrigin
                                     compositingStrategy = CompositingStrategy.Offscreen
                                 }
                                 .padding(contentPadding)
+                                .graphicsLayer {
+                                    scaleX = scale
+                                    scaleY = scale
+                                    this.alpha = alpha
+                                }
                         ) {
                             val itemState = item.state
                             AnimatedVisibility(
@@ -104,21 +126,26 @@ object SnackBarHostDefaults {
     private val floatSpring = spring<Float>(DEFAULT_DAMPING_RATIO, DEFAULT_STIFFNESS)
     private val intSizeSpring = spring<IntSize>(DEFAULT_DAMPING_RATIO, DEFAULT_STIFFNESS)
 
-    val contentPadding
-        @Composable get() = PaddingValues(
-            top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding(),
-            bottom = WindowInsets.navigationBars.union(WindowInsets.ime).asPaddingValues()
-                .calculateBottomPadding() + 16.dp
-        )
+    @Composable
+    fun contentPadding(bottomPlus: Dp = 16.dp) = PaddingValues(
+        top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding(),
+        bottom = WindowInsets.navigationBars.union(WindowInsets.ime).asPaddingValues()
+            .calculateBottomPadding() + bottomPlus
+    )
 
     val alignment = Alignment.BottomCenter
     val enterTransition = fadeIn(floatSpring) + scaleIn(
         initialScale = 0.9f,
-        animationSpec = floatSpring
     ) + expandVertically(
         clip = false,
         expandFrom = Alignment.Top,
         animationSpec = intSizeSpring
     )
     val exitTransition = fadeOut(floatSpring)
+    val stackParams = SnackBarStackParams(
+        scaleRatio = 0.95f,
+        alphaRatio = 0.6f,
+        offsetStep = (-8).dp,
+        maxVisibleItems = 6
+    )
 }
