@@ -1,76 +1,298 @@
-This is a Kotlin Multiplatform project targeting Android, iOS, Web, Desktop (JVM).
+# Snackbar
 
-* [/composeApp](./composeApp/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./composeApp/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./composeApp/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./composeApp/src/jvmMain/kotlin)
-    folder is the appropriate location.
+[![Maven Central](https://img.shields.io/maven-central/v/dev.stetsiuk/compose-snackbar.svg)](https://central.sonatype.com/artifact/dev.stetsiuk/compose-snackbar)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Kotlin](https://img.shields.io/badge/kotlin-2.1.0-blue.svg?logo=kotlin)](http://kotlinlang.org)
 
-* [/iosApp](./iosApp/iosApp) contains iOS applications. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+A flexible and customizable snackbar library for Compose Multiplatform with support for **Android**, **iOS**, **Desktop (JVM)**, **Web (JS)**, and **WebAssembly**.
 
-### Build and Run Android Application
+![Preview](media/preview.gif)
 
-To build and run the development version of the Android app, use the run configuration from the run widget
-in your IDE’s toolbar or build it directly from the terminal:
-- on macOS/Linux
-  ```shell
-  ./gradlew :composeApp:assembleDebug
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :composeApp:assembleDebug
-  ```
+## Platforms
 
-### Build and Run Desktop (JVM) Application
+| Platform | Supported | Minimum Version |
+|----------|-----------|----------------|
+| Android  | ✅        | API 24         |
+| iOS      | ✅        | iOS 15.0       |
+| Desktop  | ✅        | JVM 11         |
+| Web JS   | ✅        | -              |
+| Wasm     | ✅        | -              |
 
-To build and run the development version of the desktop app, use the run configuration from the run widget
-in your IDE’s toolbar or run it directly from the terminal:
-- on macOS/Linux
-  ```shell
-  ./gradlew :composeApp:run
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :composeApp:run
-  ```
 
-### Build and Run Web Application
+## Features
 
-To build and run the development version of the web app, use the run configuration from the run widget
-in your IDE's toolbar or run it directly from the terminal:
-- for the Wasm target (faster, modern browsers):
-  - on macOS/Linux
-    ```shell
-    ./gradlew :composeApp:wasmJsBrowserDevelopmentRun
-    ```
-  - on Windows
-    ```shell
-    .\gradlew.bat :composeApp:wasmJsBrowserDevelopmentRun
-    ```
-- for the JS target (slower, supports older browsers):
-  - on macOS/Linux
-    ```shell
-    ./gradlew :composeApp:jsBrowserDevelopmentRun
-    ```
-  - on Windows
-    ```shell
-    .\gradlew.bat :composeApp:jsBrowserDevelopmentRun
-    ```
+- **Multiplatform Support**: Works seamlessly across Android, iOS, Desktop, Web (JS), and WebAssembly
+- **Swipe-to-Dismiss**: Built-in gesture support with `AnchoredDraggableState`
+- **Stack Visualization**: Beautiful stacking effect with geometric progression for scale and alpha
+- **Customizable Animations**: Configure enter/exit transitions and stack parameters
+- **Material Design 3**: Follows Material Design principles with full customization options
+- **Flexible API**: Easy integration with simple and advanced use cases
 
-### Build and Run iOS Application
+## Installation
 
-To build and run the development version of the iOS app, use the run configuration from the run widget
-in your IDE’s toolbar or open the [/iosApp](./iosApp) directory in Xcode and run it from there.
+Add the dependency to your `commonMain` source set:
 
----
+```kotlin
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            implementation("dev.stetsiuk:compose-snackbar:1.0.0")
+        }
+    }
+}
+```
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html),
-[Compose Multiplatform](https://github.com/JetBrains/compose-multiplatform/#compose-multiplatform),
-[Kotlin/Wasm](https://kotl.in/wasm/)…
+## Quick Start
 
-We would appreciate your feedback on Compose/Web and Kotlin/Wasm in the public Slack channel [#compose-web](https://slack-chats.kotlinlang.org/c/compose-web).
-If you face any issues, please report them on [YouTrack](https://youtrack.jetbrains.com/newIssue?project=CMP).
+### 1. Basic Setup
+
+Wrap your app content with `ProvideSnackBarHost`:
+
+```kotlin
+@Composable
+fun App() {
+    val snackbarState = rememberSnackBarHostState()
+
+    ProvideSnackBarHost(state = snackbarState) {
+        MaterialTheme {
+            // Your app content
+            YourScreen()
+        }
+    }
+}
+```
+
+### 2. Show a Snackbar
+
+Access the `SnackBarHostState` and show a snackbar:
+
+```kotlin
+@Composable
+fun YourScreen() {
+    val snackbarState = LocalSnackBarHostState.current
+
+    Button(onClick = {
+        val state = SnackBarState()
+        val data = SnackBarData(state) {
+            BasicSnackBar(
+                color = Color.Black,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            ) {
+                Text("Request timeout", modifier = Modifier.padding(16.dp))
+            }
+        }
+        snackbarState.show(data)
+    }) {
+        Text("Show Snackbar")
+    }
+}
+```
+
+### 3. Custom Snackbar with Swipe-to-Dismiss
+
+Create a custom snackbar using `BasicDraggableSnackBar`:
+
+```kotlin
+fun SnackBarHostState.show(text: String) {
+    val state = SnackBarState()
+    val data = SnackBarData(state) {
+        BasicDraggableSnackBar(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            color = Color.Black,
+            onDismissed = { state.hide() }
+        ) {
+            Row(
+                modifier = Modifier.padding(16.dp, 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    modifier = Modifier.weight(1f),
+                    text = text,
+                    color = Color.White
+                )
+                IconButton(onClick = { state.hide() }) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                        tint = Color.White
+                    )
+                }
+            }
+        }
+    }
+    show(data)
+}
+```
+
+## Advanced Configuration
+
+### Stack Parameters
+
+Customize the stacking effect with `SnackBarStackParams`:
+
+```kotlin
+ProvideSnackBarHost(
+    state = snackbarState,
+    stackParams = SnackBarStackParams(
+        scaleRatio = 0.95f,
+        alphaRatio = 0.85f,
+        offsetStep = (-8).dp,
+        maxVisibleItems = 3
+    )
+) {
+    // Your content
+}
+```
+
+### Custom Animations
+
+Configure enter/exit transitions:
+
+```kotlin
+ProvideSnackBarHost(
+    state = snackbarState,
+    enter = fadeIn() + scaleIn(initialScale = 0.9f),
+    exit = fadeOut() + shrinkOut()
+) {
+    // Your content
+}
+```
+
+### Content Alignment
+
+Position snackbars anywhere on the screen:
+
+```kotlin
+ProvideSnackBarHost(
+    state = snackbarState,
+    contentAlignment = Alignment.TopCenter
+) {
+    // Your content
+}
+```
+
+### Duration Control
+
+Set custom display duration:
+
+```kotlin
+val data = SnackBarData(
+    state = SnackBarState(),
+    duration = SnackBarData.Duration.Long  // Short (2s), Long (3.5s), or Custom
+) {
+    // Your snackbar content
+}
+snackbarState.show(data)
+```
+
+## API Reference
+
+### Core Components
+
+#### `ProvideSnackBarHost`
+Main composable that manages snackbar lifecycle and rendering.
+
+**Parameters:**
+- `modifier: Modifier` - Modifier for the host container
+- `state: SnackBarHostState` - State holder for snackbar management
+- `contentPadding: PaddingValues` - Padding around snackbar area
+- `contentAlignment: Alignment` - Position of snackbars on screen
+- `enter: EnterTransition` - Animation for showing snackbars
+- `exit: ExitTransition` - Animation for hiding snackbars
+- `stackParams: SnackBarStackParams` - Configuration for stack visualization
+- `content: @Composable () -> Unit` - Your app content
+
+#### `BasicDraggableSnackBar`
+A snackbar with built-in swipe-to-dismiss functionality.
+
+**Parameters:**
+- `color: Color` - Background color
+- `modifier: Modifier` - Modifier for customization
+- `shape: Shape` - Shape of the snackbar (default: RoundedCornerShape(16.dp))
+- `contentColor: Color` - Color for content (default: White)
+- `border: BorderStroke?` - Optional border
+- `onDismissed: () -> Unit` - Callback when dismissed via swipe
+- `content: @Composable () -> Unit` - Snackbar content
+
+#### `BasicSnackBar`
+A simple snackbar without gesture handling.
+
+**Parameters:**
+- `color: Color` - Background color
+- `modifier: Modifier` - Modifier for customization
+- `shape: Shape` - Shape of the snackbar
+- `contentColor: Color` - Color for content
+- `border: BorderStroke?` - Optional border
+- `content: @Composable () -> Unit` - Snackbar content
+
+### State Management
+
+#### `SnackBarHostState`
+State holder for managing snackbars.
+
+**Methods:**
+- `show(data: SnackBarData)` - Show a snackbar
+- `hide(id: String)` - Hide a specific snackbar by ID
+
+#### `SnackBarState`
+Individual snackbar state.
+
+**Methods:**
+- `show()` - Show this snackbar
+- `hide()` - Hide this snackbar
+
+### Data Classes
+
+#### `SnackBarData`
+Represents a single snackbar.
+
+**Parameters:**
+- `state: SnackBarState` - State for this snackbar
+- `id: String` - Unique identifier (auto-generated)
+- `duration: Duration` - Display duration
+- `content: @Composable () -> Unit` - Snackbar content
+
+#### `SnackBarStackParams`
+Configuration for stack visualization.
+
+**Parameters:**
+- `scaleRatio: Float` - Base ratio for geometric scale progression (default: 0.95)
+- `alphaRatio: Float` - Base ratio for geometric alpha progression (default: 0.85)
+- `offsetStep: Dp` - Vertical offset between items (default: -8.dp)
+- `maxVisibleItems: Int` - Maximum visible snackbars (default: 3)
+
+## Sample App
+
+Check out the [composeApp](./composeApp) module for a complete working example with different customization options.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+```
+Copyright 2025 Vasyl Stetsiuk
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+```
+
+## Author
+
+**Vasyl Stetsiuk**
+- GitHub: [@vasyl-stetsiuk](https://github.com/vasyl-stetsiuk)
+- Email: stecyuk.vasil@gmail.com
+
+## Acknowledgments
+
+Built with [Compose Multiplatform](https://github.com/JetBrains/compose-multiplatform) by JetBrains.
