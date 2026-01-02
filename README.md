@@ -6,7 +6,7 @@
 
 A flexible and customizable snackbar library for Compose Multiplatform with support for **Android**, **iOS**, **Desktop (JVM)**, **Web (JS)**, and **WebAssembly**.
 
-![Preview](media/preview.gif)
+<img src="media/preview.gif" width="300" alt="SnackBar Preview"/>
 
 ## Platforms
 
