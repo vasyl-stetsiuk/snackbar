@@ -37,7 +37,7 @@ fun DraggableSnackBar(
 ) {
     BasicDraggableSnackBar(
         modifier = Modifier.padding(horizontal = 16.dp),
-        color = Color.Gray,
+        color = Color.Black,
         onDismissed = onClose,
         content = {
             Row(
@@ -48,7 +48,8 @@ fun DraggableSnackBar(
             ) {
                 Text(
                     modifier = Modifier.weight(1f),
-                    text = text
+                    text = text,
+                    color = Color.White
                 )
                 IconButton(
                     onClick = onClose,
