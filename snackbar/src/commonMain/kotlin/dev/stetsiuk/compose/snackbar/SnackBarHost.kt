@@ -3,6 +3,8 @@ package dev.stetsiuk.compose.snackbar
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -27,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlin.time.Clock
@@ -96,6 +99,11 @@ fun ProvideSnackBarHost(
 }
 
 object SnackBarHostDefaults {
+    private const val DEFAULT_DAMPING_RATIO = Spring.DampingRatioMediumBouncy
+    private const val DEFAULT_STIFFNESS = Spring.StiffnessLow
+    private val floatSpring = spring<Float>(DEFAULT_DAMPING_RATIO, DEFAULT_STIFFNESS)
+    private val intSizeSpring = spring<IntSize>(DEFAULT_DAMPING_RATIO, DEFAULT_STIFFNESS)
+
     val contentPadding
         @Composable get() = PaddingValues(
             top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding(),
@@ -104,11 +112,13 @@ object SnackBarHostDefaults {
         )
 
     val alignment = Alignment.BottomCenter
-    val enterTransition = fadeIn() + scaleIn(
-        initialScale = 0.9f
+    val enterTransition = fadeIn(floatSpring) + scaleIn(
+        initialScale = 0.9f,
+        animationSpec = floatSpring
     ) + expandVertically(
         clip = false,
-        expandFrom = Alignment.Top
+        expandFrom = Alignment.Top,
+        animationSpec = intSizeSpring
     )
-    val exitTransition = fadeOut()
+    val exitTransition = fadeOut(floatSpring)
 }
